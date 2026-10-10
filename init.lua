@@ -673,9 +673,9 @@ require('lazy').setup({
 	      },
 	    },
 	 },
-         pyright = {
+         basedpyright = {
 	    settings = {
-	      pyright = { disableOrganizeImports = true }, -- let ruff handle imports
+	      basedpyright = { disableOrganizeImports = true }, -- let ruff handle imports
 	    },
 	  },
 	 ruff = {},
@@ -944,6 +944,7 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    branch = 'master',
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
