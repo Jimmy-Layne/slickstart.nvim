@@ -675,7 +675,11 @@ require('lazy').setup({
 	 },
          basedpyright = {
 	    settings = {
-	      basedpyright = { disableOrganizeImports = true }, -- let ruff handle imports
+	      basedpyright = {
+	        disableOrganizeImports = true, -- let ruff handle imports
+	        -- 'standard' matches pyright's default; basedpyright's 'recommended' adds many strict warnings
+	        analysis = { typeCheckingMode = 'standard' },
+	      },
 	    },
 	  },
 	 ruff = {},
@@ -726,19 +730,20 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      -- Register each server's overrides with Neovim's built-in LSP config.
+      -- vim.lsp.config merges them over nvim-lspconfig's defaults, so only
+      -- values explicitly passed above change (for example, turning off
+      -- formatting for ts_ls). mason-lspconfig v2 no longer supports
+      -- `handlers`, so this replaces the old per-server setup callback.
+      for server_name, server in pairs(servers) do
+        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        vim.lsp.config(server_name, server)
+      end
+
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
         automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
+        automatic_enable = true, -- calls vim.lsp.enable() for every installed server
       }
     end,
   },

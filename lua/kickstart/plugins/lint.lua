@@ -41,6 +41,23 @@ return {
       -- lint.linters_by_ft['terraform'] = nil
       -- lint.linters_by_ft['text'] = nil
 
+      -- Drop linters whose executable isn't installed (e.g. markdownlint needs
+      -- Node.js), so a missing tool doesn't raise an error on every BufEnter.
+      local function is_installed(name)
+        local linter = lint.linters[name]
+        if type(linter) == 'function' then
+          linter = linter()
+        end
+        local cmd = type(linter) == 'table' and linter.cmd or nil
+        if type(cmd) == 'function' then
+          cmd = cmd()
+        end
+        return type(cmd) == 'string' and vim.fn.executable(cmd) == 1
+      end
+      for filetype, names in pairs(lint.linters_by_ft) do
+        lint.linters_by_ft[filetype] = vim.tbl_filter(is_installed, names)
+      end
+
       -- Create autocommand which carries out the actual linting
       -- on the specified events.
       local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })
